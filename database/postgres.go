@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/RestWebkooks/models"
+	_ "github.com/lib/pq"
 )
 
 type PostgresRespository struct {
