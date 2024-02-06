@@ -31,7 +31,7 @@ func (repo *PostgresRespository) InsetUser(ctx context.Context, user *models.Use
 	return err
 }
 
-func (repo *PostgresRespository) GetUserById(ctx context.Context, id int64) (*models.User, error) {
+func (repo *PostgresRespository) GetUserById(ctx context.Context, id string) (*models.User, error) {
 	rowsUser, err := repo.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $1", id)
 
 	defer func() {
