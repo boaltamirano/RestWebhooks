@@ -8,6 +8,11 @@ import (
 	"github.com/RestWebkooks/repository"
 	"github.com/RestWebkooks/server"
 	"github.com/segmentio/ksuid"
+	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	HASH_COST = 8
 )
 
 type SignUpRequest struct {
@@ -28,6 +33,13 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), HASH_COST)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		id, err := ksuid.NewRandom()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,7 +47,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 		}
 		var user = models.User{
 			Email:    request.Email,
-			Password: request.Password,
+			Password: string(hashedPassword),
 			Id:       id.String(),
 		}
 
