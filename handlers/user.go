@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/RestWebkooks/fileAlternatives/server"
 	"github.com/RestWebkooks/models"
 	"github.com/RestWebkooks/repository"
+	"github.com/RestWebkooks/server"
 	"github.com/segmentio/ksuid"
 )
 

@@ -26,7 +26,7 @@ func NewPostgresRepository(url string) (*PostgresRespository, error) {
 // Reciberfunction para definir los metodos del struct PostgresRespository
 // Metodo InsetUser -> es la funcion que se inplementa en el UserRepository para insertar usuarios
 func (repo *PostgresRespository) InsetUser(ctx context.Context, user *models.User) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO users (email, password) VALUES ($1, $2)", user.Email, user.Password)
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)", user.Id, user.Email, user.Password)
 
 	return err
 }
