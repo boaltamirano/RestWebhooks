@@ -111,6 +111,11 @@ func (repo *PostgresRespository) GetPostById(ctx context.Context, id string) (*m
 	return &post, nil
 }
 
+func (repo *PostgresRespository) UpdatePost(ctx context.Context, post *models.Post) error {
+	_, err := repo.db.ExecContext(ctx, "UPDATE posts SET post_content = $1 WHERE id = $2 and user_id = $3", post.PostContent, post.Id, post.UserId)
+	return err
+}
+
 func (repo *PostgresRespository) Close() error {
 	return repo.db.Close()
 }

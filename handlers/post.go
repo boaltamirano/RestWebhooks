@@ -13,13 +13,17 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-type InsertPostRequest struct {
+type UpsertPostRequest struct {
 	PostContent string `json:"post_content"`
 }
 
 type PostResponse struct {
 	Id          string `json:"id"`
 	PostContent string `json:"post_content"`
+}
+
+type PostUpdateResponse struct {
+	Message string `json:"message"`
 }
 
 func InsertPostHandler(s server.Server) http.HandlerFunc {
@@ -35,7 +39,7 @@ func InsertPostHandler(s server.Server) http.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
-			var postRequest = InsertPostRequest{}
+			var postRequest = UpsertPostRequest{}
 			if err := json.NewDecoder(r.Body).Decode(&postRequest); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -78,5 +82,46 @@ func GetPostByIdHandler(s server.Server) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(post)
+	}
+}
+
+func UpdatePostHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		tokenString := strings.TrimSpace(r.Header.Get("Authorization")) // tokenString -> el token que se envia en la peticion
+		token, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(s.Config().JWTSecret), nil
+		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+			var postRequest = UpsertPostRequest{}
+			if err := json.NewDecoder(r.Body).Decode(&postRequest); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			post := models.Post{
+				Id:          params["id"],
+				PostContent: postRequest.PostContent,
+				UserId:      claims.UserId,
+			}
+			err = repository.UpdatePost(r.Context(), &post)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(PostUpdateResponse{
+				Message: "Post updated",
+			})
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
