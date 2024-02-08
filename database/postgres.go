@@ -23,6 +23,8 @@ func NewPostgresRepository(url string) (*PostgresRespository, error) {
 	return &PostgresRespository{db}, nil
 }
 
+//***************************USER***********************************//
+
 // Reciberfunction para definir los metodos del struct PostgresRespository
 // Metodo InsetUser -> es la funcion que se inplementa en el UserRepository para insertar usuarios
 func (repo *PostgresRespository) InsetUser(ctx context.Context, user *models.User) error {
@@ -75,6 +77,13 @@ func (repo *PostgresRespository) GetUserByEmail(ctx context.Context, email strin
 		return nil, err
 	}
 	return &user, nil
+}
+
+// *******************************************POST*********************************************/
+func (repo *PostgresRespository) InsertPost(ctx context.Context, post *models.Post) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO posts (id, post_content, user_id) VALUES ($1, $2, $3)", post.Id, post.PostContent, post.UserId)
+
+	return err
 }
 
 func (repo *PostgresRespository) Close() error {
