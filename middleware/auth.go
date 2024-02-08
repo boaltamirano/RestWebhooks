@@ -35,7 +35,7 @@ func CheckAuthNiddleware(s server.Server) func(h http.Handler) http.Handler {
 
 			// Siguiente paso para las rutas protegidas
 			tokenString := strings.TrimSpace(r.Header.Get("Authorization")) // tokenString -> el token que se envia en la peticion
-			_, err := jwt.ParseWithClaims(tokenString, *&models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			_, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(s.Config().JWTSecret), nil
 			})
 
