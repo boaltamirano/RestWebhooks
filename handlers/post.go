@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/RestWebkooks/models"
@@ -154,5 +155,27 @@ func DeletePostHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func ListPostHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		pageStr := r.URL.Query().Get("page")
+		var page = uint64(0)
+		if pageStr != "" {
+			page, err = strconv.ParseUint(pageStr, 10, 64) // El 64 debe ser del mismo tipo de uint64
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+		posts, err := repository.ListPost(r.Context(), page)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(posts)
 	}
 }
