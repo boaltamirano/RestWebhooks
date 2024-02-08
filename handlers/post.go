@@ -9,6 +9,7 @@ import (
 	"github.com/RestWebkooks/repository"
 	"github.com/RestWebkooks/server"
 	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 )
 
@@ -64,5 +65,18 @@ func InsertPostHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func GetPostByIdHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		post, err := repository.GetPostById(r.Context(), params["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
 	}
 }
