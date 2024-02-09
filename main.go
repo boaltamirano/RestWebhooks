@@ -9,6 +9,7 @@ import (
 	"github.com/RestWebkooks/handlers"
 	"github.com/RestWebkooks/middleware"
 	"github.com/RestWebkooks/server"
+	"github.com/RestWebkooks/websocket"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -41,6 +42,9 @@ func main() {
 // Nueva funcion
 func BindRoutes(s server.Server, r *mux.Router) {
 
+	// Agregacion de nuevo hub
+	hub := websocket.NewHub()
+
 	r.Use(middleware.CheckAuthNiddleware(s))
 
 	r.HandleFunc("/", handlers.HomeHandler(s)).Methods(http.MethodGet)
@@ -54,4 +58,6 @@ func BindRoutes(s server.Server, r *mux.Router) {
 	r.HandleFunc("/posts/{id}", handlers.UpdatePostHandler(s)).Methods(http.MethodPut)
 	r.HandleFunc("/posts/{id}", handlers.DeletePostHandler(s)).Methods(http.MethodDelete)
 	r.HandleFunc("/posts", handlers.ListPostHandler(s)).Methods(http.MethodGet)
+
+	r.HandleFunc("/ws", hub.HandlerWebSocket)
 }
