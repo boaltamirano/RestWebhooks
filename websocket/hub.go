@@ -46,3 +46,41 @@ func (hub *Hub) HandlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Activamos go routina que se encarge de escribir los mensajes al web socket
 	go client.Write()
 }
+
+// Reciver function que le permite correr o ejecutarce
+func (hub *Hub) Run() {
+	for {
+		select { // Multiplexacion de los channels ya registrados
+		case client := <-hub.register:
+			hub.onConnect(client)
+		case client := <-hub.unregister:
+			hub.onDisconnect(client)
+		}
+	}
+}
+
+func (hub *Hub) onConnect(client *Client) {
+	log.Println("Client Connected", client.socket.RemoteAddr()) // imprimimos que un cliente se conecto con la impresion de la direccion de conexion
+	hub.mutex.Lock()                                            // Bloqueamos el programa para evitar condicion de carrera
+	defer hub.mutex.Unlock()
+	client.id = client.socket.RemoteAddr().String() // Le asignamos un id a los clientes registrados correctamente
+	hub.clients = append(hub.clients, client)       // agregamos al cliente a los clientes del hub
+}
+
+func (hub *Hub) onDisconnect(client *Client) {
+	log.Println("Client Connected", client.socket.RemoteAddr()) // imprimimos que un cliente se conecto con la impresion de la direccion de conexion
+	client.socket.Close()                                       // Cerramos la conexion del cliente que se desconecto
+	hub.mutex.Lock()                                            // Bloqueamos el programa para evitar condicion de carrera
+	defer hub.mutex.Unlock()
+	i := -1
+	for j, c := range hub.clients { // iterar a traves de los clientes para buscar el cliente que se desconecto
+		if c.id == client.id {
+			i = j
+		}
+	}
+
+	//proceso de eliminar clientes
+	copy(hub.clients[i:], hub.clients[i+1:])
+	hub.clients[len(hub.clients)-1] = nil
+	hub.clients = hub.clients[:len(hub.clients)-1]
+}
