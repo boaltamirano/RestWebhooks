@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -83,4 +84,13 @@ func (hub *Hub) onDisconnect(client *Client) {
 	copy(hub.clients[i:], hub.clients[i+1:])
 	hub.clients[len(hub.clients)-1] = nil
 	hub.clients = hub.clients[:len(hub.clients)-1]
+}
+
+func (hub *Hub) Brodcast(message any, ignore *Client) {
+	data, _ := json.Marshal(message)
+	for _, client := range hub.clients {
+		if client != ignore {
+			client.outbound <- data
+		}
+	}
 }

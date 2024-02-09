@@ -18,6 +18,8 @@ import (
 	"github.com/RestWebkooks/database"
 	"github.com/RestWebkooks/repository"
 	"github.com/gorilla/mux"
+
+	websocket "github.com/RestWebkooks/websocket"
 )
 
 type Config struct {
@@ -29,18 +31,24 @@ type Config struct {
 // Para tener Server tendremos un metodo Config() que retorne algo de tipo *config(type Config struct)
 type Server interface {
 	Config() *Config
+	Hub() *websocket.Hub // implementamos una nueva funcion
 }
 
 // Broker que se encargara de manejar este server
 type Broker struct {
 	config *Config
 	router *mux.Router // Ruteador para definir las rutas del server
+	hub    *websocket.Hub
 }
 
 // Metodo para que el struct Broker satisfaga la interface:
 // //	Un metodo llamado Config() que retorna una configuracion "*Config"
 func (b *Broker) Config() *Config {
 	return b.config // retornamos config de Broker para que se comporte como un tipo server "config *Config"
+}
+
+func (b *Broker) Hub() *websocket.Hub {
+	return b.hub
 }
 
 // Definir el constructor para nuestro struc
@@ -63,6 +71,7 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 	broker := &Broker{
 		config: config,
 		router: mux.NewRouter(),
+		hub:    websocket.NewHub(),
 	}
 
 	return broker, nil
@@ -76,6 +85,7 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	go b.hub.Run() // Activamos el hub.Run para que corra en una subrutina
 	repository.SetRepository(repo)
 	log.Println("starting server on port", b.config.Port)
 
